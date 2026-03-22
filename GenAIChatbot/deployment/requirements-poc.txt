@@ -1,0 +1,49 @@
+# Minimal requirements for PoC deployment
+# This excludes heavy packages like transformers and torch to speed up installation
+
+# Core web framework
+Flask>=2.0.1,<4.0.0
+flask-cors>=3.1.0,<5.0.0
+
+# Authentication
+PyJWT>=2.8.0,<3.0.0
+bcrypt>=4.0.0,<5.0.0
+
+# LLM Providers
+openai>=1.12.0,<2.0.0
+google-generativeai>=0.8.0,<1.0.0
+
+# Utilities
+python-dotenv>=1.0.0,<2.0.0
+requests>=2.26.0,<3.0.0
+
+# Jira Integration
+jira>=3.5.2,<4.0.0
+
+# RAG Support (lightweight)
+PyPDF2>=3.0.0,<4.0.0
+
+# LangChain for agent framework (core only)
+langchain>=1.0.0,<2.0.0
+langchain-core>=1.0.0,<2.0.0
+langchain-openai>=1.0.0,<2.0.0
+langgraph>=1.0.2,<1.1.0
+
+# MCP Integration
+mcp>=0.9.0,<1.0.0
+
+# Coze Platform (optional)
+cozepy>=0.1.0,<1.0.0
+
+# API Documentation
+flasgger>=0.9.7,<1.0.0
+
+# Protobuf (required for Google packages)
+protobuf>=3.19.5,<5.0.0
+
+# Note: Excluded for PoC (install separately if needed):
+# - transformers (very heavy, ~2GB+)
+# - torch (very heavy, ~1GB+)
+# - numpy (installed as dependency if needed)
+# - langchain-google-genai (install separately if needed)
+

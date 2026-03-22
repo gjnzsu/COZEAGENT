@@ -1,0 +1,24 @@
+[Unit]
+Description=Generative AI Chatbot Service
+After=network.target
+
+[Service]
+Type=simple
+User=chatbot
+Group=chatbot
+WorkingDirectory=/opt/chatbot/generative-ai-chatbot
+EnvironmentFile=/etc/chatbot/.env
+ExecStart=/opt/chatbot/venv/bin/python3 /opt/chatbot/generative-ai-chatbot/run_production.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=chatbot
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
