@@ -14,12 +14,12 @@ Multiple AI services (ai-market-studio, AI Requirement Tool, etc.) independently
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │  AI Services    │     │  AI Gateway      │     │  LLM Providers  │
 │  ai-market-     │────▶│  LiteLLM         │────▶│  OpenAI         │
-│  studio, etc.   │     │  Cloud Run       │     │  DeepSeek       │
+│  studio, etc.   │     │  GKE             │     │  DeepSeek       │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
 ```
 
 - **LiteLLM** — unified proxy for OpenAI + DeepSeek; handles retries, timeouts, load balancing
-- **Cloud Run** — serverless hosting, scales to zero, integrates with GCP Secret Manager
+- **GKE** — same cluster as existing services; unified networking, monitoring, and security policies
 - **OpenTelemetry** — auto-instrumented via LiteLLM's native OTel hooks; exports to OTel collector (future)
 - **No auth in v1** — internal services only, network-level access control
 
@@ -52,12 +52,12 @@ Multiple AI services (ai-market-studio, AI Requirement Tool, etc.) independently
    - No hardcoded keys in code or config files
 
 4. **Health check**
-   - GET `/health` — returns `{"status": "ok"}` for Cloud Run readiness probe
+   - GET `/health` — returns `{"status": "ok"}` for GKE readiness probe
    - GET `/readiness` — checks downstream provider connectivity
 
 5. **Observability hooks**
    - LiteLLM emits OTel traces/spans for every request
-   - Logs to Cloud Logging (stdout → Cloud Run → Cloud Logging)
+   - Logs to Cloud Logging (stdout → GKE → Cloud Logging)
    - Metrics: request count, latency, error rate, token usage (where exposed by providers)
 
 ### What's NOT in v1
@@ -82,7 +82,7 @@ model_list:
     litellm_params:
       model: deepseek/deepseek-chat
 
-environment: cloud_run
+environment: gke
 port: 4000
 ```
 
@@ -106,13 +106,14 @@ port: 4000
 
 ---
 
-## Deployment (Cloud Run)
+## Deployment (GKE)
 
 - **Dockerfile**: LiteLLM base image + config + health check
 - **cloudbuild.yaml**: Build + push to Artifact Registry
-- **Secrets**: Bound via Cloud Run IAM — no secret files in container
-- **Min instances**: 1 (avoid cold starts for latency-sensitive calls)
-- **Max instances**: 10 (cost guard)
+- **Kubernetes manifests** (`k8s/`): Deployment + Service + HPA + Secret references
+- **Secrets**: Referenced via Kubernetes Secret — no secret files in container image
+- **Replicas**: 2 (ensure availability; adjust based on load)
+- **Resource limits**: Set CPU/memory limits in Deployment manifest
 
 ---
 
@@ -137,6 +138,10 @@ ai-gateway-service/
 │   ├── test_routing.py
 │   └── test_health.py
 ├── cloudbuild.yaml
+├── k8s/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── secret.yaml      # References GCP Secret Manager
 └── README.md
 ```
 
@@ -153,6 +158,6 @@ ai-gateway-service/
 ## Next Steps
 
 1. Implement ai-gateway-service (this spec)
-2. Deploy to Cloud Run
+2. Deploy to GKE (existing cluster)
 3. Smoke test with one consumer (e.g., ai-market-studio)
 4. Then build ai-sre-observability (OTel collector + Prometheus + Grafana)
